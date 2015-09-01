@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+
+    <title>Tile Server</title>
+
+    
+
+
+<link rel="stylesheet" href="vendor/pure-min.css">
+
+
+
+
+
+
+
+  
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="css/layouts/email-old-ie.css">
+    <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="css/layouts/email.css">
+    <!--<![endif]-->
+  
+ <link rel="stylesheet" href="vendor/leaflet.css" />
+    
+<script src="vendor/leaflet.js"></script>
+    
+ <script src="vendor/angular.min.js"></script>
+</head>
+<body>
+
+
+
+
+
+
+<div id="layout" class="content pure-g">
+    <div id="nav" class="pure-u">
+        <a href="#" class="nav-menu-button">Menu</a>
+
+        <div class="nav-inner">
+            <button id="refreshbtn" class="primary-button pure-button">Refresh</button>
+
+            <div class="pure-menu">
+                <ul class="pure-menu-list">
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Server</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Tools</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Vector</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="list" class="pure-u-1">
+    </div>
+    
+    <div id="main" class="pure-u-1">
+        <div class="email-content">
+            <div class="email-content-header pure-g">
+                <div class="pure-u-1-2">
+                    <h1 id="nametitle" class="email-content-title">Pick Tileset</h1>
+                    <p id="infotitle" class="email-content-subtitle">
+                      
+                    </p>
+                </div>
+<div class="pure-u-1 pure-u-md-1-3">
+               <span>    <label for="state">Image </label>
+                <select id="state" class="pure-input-1-2">
+                    <option>jpg</option>
+                    <option>png</option>
+                </select>
+            </div>
+            <button id="extact" class="pure-button pure-button-primary">Extract tiles</button>
+              </span>
+            </div>
+          <div class="email-content-body">
+              <div id="mapcontainer">
+               <div id="map"></div> 
+               </div>
+            </div>
+        </div>
+    </div>
+    
+     
+    
+    
+    
+</div>
+<script src="socket.io-1.3.5.js"></script>
+<script src="vendor/jquery.min.js"></script>
+<script>
+    var maparray =[];
+    
+      var socket = io();
+      var myApp = angular.module('myApp', []);
+      socket.emit('chat message', "bob");
+       socket.emit('Rtiles', "bob");
+   // YUI().use('node-base', 'node-event-delegate', function (Y) {
+
+       // var menuButton = Y.one('.nav-menu-button'),
+       //     nav        = Y.one('#nav');
+
+        // Setting the active class name expands the menu vertically on small screens.
+      //  menuButton.on('click', function (e) {
+      //      nav.toggleClass('active');
+      //  });
+        
+        socket.on('chat message', function(msg){
+            console.log(msg);
+  });
+  
+ $( "#extact" ).on( "click", function( event ) { 
+    socket.emit('folders', targetmap); 
+      
+ }); 
+  
+  $( "#refreshbtn" ).on( "click", function( event ) {
+$( "#list" ).html( "" )
+   socket.emit('Rtiles', "bob");
+});
+
+socket.on('resetTiles', function(msg){
+           $( "#list" ).html( "" )
+           maparray =[];
+  }); 
+  
+  socket.on('recTiles', function(msg){
+            console.log(msg);
+            
+            addmbtiles(msg);
+  }); 
+
+   var count = 5; 
+   
+function addmbtiles(msg){
+    var tileP = tilepic(msg.center[0]+1,msg.center[1],msg.minzoom);
+var tilex = tileP.xtile;
+var tiley = tileP.ytile;
+    console.log(msg.scheme)
+    maparray.push(msg);
+   	angular.element(document.getElementById('list')).append(
+           
+           
+           
+            "<div id="+"'"+msg.id+"'"+"class='email-item email-item-selected pure-g'"+"onclick='mapfunction(this.id)'"+">"+
+            "<div class='pure-u'>"+
+                "<img class='email-avatar' height='64' width='64' src='http://localhost:3001/"+msg.id+"/"+msg.minzoom+"/"+tilex+"/"+tiley+".png'>"+
+            "</div>"+
+
+            "<div class='pure-u-3-4'>"+
+                "<h5 class='email-name'>"+msg.basename+"</h5>"+
+                "<h4 class='email-subject'>"+"http://localhost:3001/"+msg.id+"/{z}/{x}/{y}.png"+"</h4>"+
+                "<p class='email-desc'>"+msg.filesize/2048+"</p>"+
+                "<p class='email-desc'>"+'Min Zoom: '+msg.minzoom+' Max Zoom: '+msg.maxzoom+' Scheme: '+msg.scheme+"</p>"+
+                "<p class='email-desc'>"+'Bounds: '+msg.bounds[0]+', '+msg.bounds[1]+', '+msg.bounds[2]+', '+msg.bounds[3]+"</p>"+
+            "</div>"+
+        "</div>"
+           
+           
+           
+           );
+}
+var targetmap;
+ var  map = L.map('map');
+ var tilelayer =  L.tileLayer("http://localhost:3001/{z}/{x}/{y}.png").addTo(map);
+function mapfunction(clickid)
+{   
+  
+    console.log(maparray);
+    
+    for(i=0; i<maparray.length; i++)
+    {
+        
+        if(clickid == maparray[i].id)
+        {
+          targetmap = maparray[i];
+            $( "#nametitle" ).html( maparray[i].basename );
+  $( "#infotitle" ).html( "http://localhost:3001/"+maparray[i].id+"/{z}/{x}/{y}.png");
+    one = maparray[i].bounds[0];
+    two = maparray[i].bounds[1];
+    three = maparray[i].bounds[2];
+    four = maparray[i].bounds[3];  
+            
+    map.removeLayer(tilelayer);
+ 
+    console.log(maparray[i].bounds[0]);
+    console.log(maparray[i].bounds[1]);
+    console.log(maparray[i].bounds[2]);
+    console.log(maparray[i].bounds[3]);
+    
+           map.setView([maparray[i].center[0], maparray[i].center[1]], maparray[i].minzoom);
+        tilelayer =    L.tileLayer("http://localhost:3001/"+maparray[i].id+"/{z}/{x}/{y}.png",{minZoom: maparray[i].minzoom, maxZoom:maparray[i].maxzoom}).addTo(map);
+            console.log("we made it");
+            
+                //   map.fitBounds([
+    //  [one, two]
+     // [three, four]
+   // ]);
+        break;
+        }
+    }
+   
+    
+}
+
+var tilepic = function (lat_deg, long_deg, zoom)
+{
+    
+   var lat_rad = Math.radians(lat_deg);
+   var n = Math.pow(2.0, zoom);
+   xtile = parseInt((long_deg + 180.0) / 360 * n);
+   ytile = parseInt((1.0 - Math.log(Math.tan(lat_rad) + (1 / Math.cos(lat_rad))) / Math.PI) / 2.0 * n);
+   console.log(xtile);
+   console.log(ytile);
+   console.log(lat_rad);
+      return {
+        xtile: xtile,
+        ytile: ytile
+    };  
+    
+}
+
+Math.radians = function(degrees) {
+  return degrees * Math.PI/180;
+};
+
+</script>
+
+
+
+
+
+
+</body>
+</html>
